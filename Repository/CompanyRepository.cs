@@ -7,6 +7,7 @@ using Contracts;
 using Entities.Models;
 using Entities;
 
+
 namespace Repository
 {
     public class CompanyRepository : RepositoryBase<Company>, ICompanyRepository
@@ -15,5 +16,9 @@ namespace Repository
         : base(repositoryContext)
         {
         }
+        public IEnumerable<Company> GetAllCompanies(bool trackChanges) =>
+       FindAll(trackChanges)
+        .OrderBy(c => c.Name)
+        .ToList();
     }
 }
