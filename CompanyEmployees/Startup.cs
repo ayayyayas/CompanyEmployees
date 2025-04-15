@@ -7,7 +7,7 @@ using Entities.Models;
 using Contracts;
 
 namespace Start;
-//wqqw
+
 public class Startup
 {
     public Startup(IConfiguration configuration)
