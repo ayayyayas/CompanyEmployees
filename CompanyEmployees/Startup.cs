@@ -1,55 +1,72 @@
-﻿using CompanyEmployees.Extensions;
-using Contracts;
-using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.AspNetCore.HttpOverrides;
 using NLog;
+using CompanyEmployees.Extensions;
+using AutoMapper;
+using Entities.DataTransferObjects;
+using Entities.Models;
+using Contracts;
 
-namespace CompanyEmployees
+namespace Start;
+
+public class Startup
 {
-    public class Startup
+    public Startup(IConfiguration configuration)
     {
-        public Startup(IConfiguration configuration)
+        LogManager.LoadConfiguration(string.Concat(Directory.GetCurrentDirectory(),
+       "/nlog.config"));
+        Configuration = configuration;
+    }
+
+    public IConfiguration Configuration { get; }
+
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddAutoMapper(typeof(Startup));
+        services.ConfigureCors();
+        services.ConfigureIISIntegration();
+        services.ConfigureLoggerService();
+        services.ConfigureSqlContext(Configuration);
+        services.ConfigureRepositoryManager();
+        services.AddControllers();
+        services.AddControllers(config => {
+            config.RespectBrowserAcceptHeader = true;
+            config.ReturnHttpNotAcceptable = true;
+        })
+     .AddXmlDataContractSerializerFormatters()
+     .AddCustomCSVFormatter();
+    }
+
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env,
+ ILoggerManager logger)
+    {
+        if (env.IsDevelopment())
         {
-            LogManager.LoadConfiguration(string.Concat(Directory.GetCurrentDirectory(),
-           "/nlog.config"));
-            Configuration = configuration;
+            app.UseDeveloperExceptionPage();
         }
-
-        public IConfiguration Configuration { get; }
-
-        public void ConfigureServices(IServiceCollection services)
+        else
         {
-            services.ConfigureCors();
-            services.ConfigureIISIntegration();
-            services.ConfigureLoggerService();
-            services.ConfigureSqlContext(Configuration);
-            services.ConfigureRepositoryManager();
-            services.AddControllers();
-            services.AddAutoMapper(typeof(Startup));
-        }
-
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env,
-ILoggerManager logger)
-        {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-            }
-            app.ConfigureExceptionHandler(logger);
-            app.UseHttpsRedirection();
             app.UseHsts();
-            app.UseStaticFiles();
-            app.UseCors("CorsPolicy");
-            app.UseForwardedHeaders(new ForwardedHeadersOptions
-            {
-                ForwardedHeaders = ForwardedHeaders.All
-            });
-            app.UseRouting();
-            app.UseAuthorization();
-            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+        }
+        app.ConfigureExceptionHandler(logger);
+        app.UseHttpsRedirection();
+        app.UseStaticFiles();
+        app.UseCors("CorsPolicy");
+        app.UseForwardedHeaders(new ForwardedHeadersOptions
+        {
+            ForwardedHeaders = ForwardedHeaders.All
+        });
+        app.UseRouting();
+        app.UseAuthorization();
+        app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+    }
+    public class MappingProfile : Profile
+    {
+        public MappingProfile()
+        {
+            CreateMap<Company, CompanyDto>()
+            .ForMember(c => c.FullAddress,
+            opt => opt.MapFrom(x => string.Join(' ', x.Address, x.Country)));
+            CreateMap<Employee, EmployeeDto>();
         }
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using NLog;
+using Start;
 
 namespace CompanyEmployees;
 
