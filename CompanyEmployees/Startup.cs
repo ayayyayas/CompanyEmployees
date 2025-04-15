@@ -32,12 +32,13 @@ public class Startup
             config.RespectBrowserAcceptHeader = true;
             config.ReturnHttpNotAcceptable = true;
         })
-     .AddXmlDataContractSerializerFormatters()
-     .AddCustomCSVFormatter();
+    .AddXmlDataContractSerializerFormatters()
+    .AddCustomCSVFormatter();
+
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env,
- ILoggerManager logger)
+    ILoggerManager logger)
     {
         if (env.IsDevelopment())
         {
@@ -59,14 +60,5 @@ public class Startup
         app.UseAuthorization();
         app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
     }
-    public class MappingProfile : Profile
-    {
-        public MappingProfile()
-        {
-            CreateMap<Company, CompanyDto>()
-            .ForMember(c => c.FullAddress,
-            opt => opt.MapFrom(x => string.Join(' ', x.Address, x.Country)));
-            CreateMap<Employee, EmployeeDto>();
-        }
-    }
+
 }
