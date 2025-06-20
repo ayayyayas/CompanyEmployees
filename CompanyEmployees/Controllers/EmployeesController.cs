@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Entities.RequestFeatures;
 using Newtonsoft.Json;
+using Repository.DataShaping;
 
 namespace CompanyEmployees.Controllers
 {
@@ -17,33 +18,36 @@ namespace CompanyEmployees.Controllers
         private readonly IRepositoryManager _repository;
         private readonly ILoggerManager _logger;
         private readonly IMapper _mapper;
-        public EmployeesController(IRepositoryManager repository, ILoggerManager
-       logger,
-        IMapper mapper)
+        private readonly IDataShaper<EmployeeDto> _dataShaper;
+        public EmployeesController(IRepositoryManager repository, ILoggerManager logger,
+    IMapper mapper, IDataShaper<EmployeeDto> dataShaper)
         {
             _repository = repository;
             _logger = logger;
             _mapper = mapper;
+            _dataShaper = dataShaper;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetEmployeesForCompany(Guid companyId,
- [FromQuery] EmployeeParameters employeeParameters)
+            [FromQuery] EmployeeParameters employeeParameters)
         {
+            if (!employeeParameters.ValidAgeRange)
+                return BadRequest("Max age can't be less than min age.");
             var company = await _repository.Company.GetCompanyAsync(companyId,
            trackChanges:
             false);
             if (company == null)
             {
-                _logger.LogInfo($"Company with id: {companyId} doesn't exist in thedatabase.");
-            return NotFound();
+                _logger.LogInfo($"Company with id: {companyId} doesn't exist in the database.");
+                return NotFound();
             }
             var employeesFromDb = await _repository.Employee.GetEmployeesAsync(companyId,
             employeeParameters, trackChanges: false);
             Response.Headers.Add("X-Pagination",
             JsonConvert.SerializeObject(employeesFromDb.MetaData));
             var employeesDto = _mapper.Map<IEnumerable<EmployeeDto>>(employeesFromDb);
-            return Ok(employeesDto);
+            return Ok(_dataShaper.ShapeData(employeesDto, employeeParameters.Fields));
         }
 
 
