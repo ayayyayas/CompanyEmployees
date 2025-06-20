@@ -1,17 +1,16 @@
 ﻿using AutoMapper;
 using CompanyEmployees.ActionFilters;
+using CompanyEmployees.ModelBinders;
 using Contracts;
 using Entities.DataTransferObjects;
 using Entities.Models;
-using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
-using Entities.RequestFeatures;
-using Newtonsoft.Json;
+using System;
 using static System.Collections.Specialized.BitVector32;
-using CompanyEmployees.ModelBinders;
 
 namespace CompanyEmployees.Controllers
 {
+    [ApiVersion("2.0")]
     [Route("api/companies")]
     [ApiController]
     public class CompaniesController : ControllerBase
@@ -29,7 +28,8 @@ namespace CompanyEmployees.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCompanies()
         {
-            var companies = await _repository.Company.GetAllCompaniesAsync(trackChanges:false);
+            var companies = await _repository.Company.GetAllCompaniesAsync(trackChanges:
+           false);
             var companiesDto = _mapper.Map<IEnumerable<CompanyDto>>(companies);
             return Ok(companiesDto);
         }
@@ -52,7 +52,8 @@ namespace CompanyEmployees.Controllers
         }
 
         [HttpGet("collection/({ids})", Name = "CompanyCollection")]
-        public async Task<IActionResult> GetCompanyCollection([ModelBinder(BinderType = typeof(ArrayModelBinder))] IEnumerable<Guid> ids)
+        public async Task<IActionResult> GetCompanyCollection(
+ [ModelBinder(BinderType = typeof(ArrayModelBinder))] IEnumerable<Guid> ids)
         {
             if (ids == null)
             {
@@ -71,9 +72,9 @@ namespace CompanyEmployees.Controllers
             return Ok(companiesToReturn);
         }
         [HttpPost]
-        [HttpPost]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
-        public async Task<IActionResult> CreateCompany([FromBody] CompanyForCreationDto company)
+        public async Task<IActionResult> CreateCompany([FromBody] CompanyForCreationDto
+ company)
         {
             var companyEntity = _mapper.Map<Company>(company);
             _repository.Company.CreateCompany(companyEntity);
@@ -82,9 +83,9 @@ namespace CompanyEmployees.Controllers
             return CreatedAtRoute("CompanyById", new { id = companyToReturn.Id },
             companyToReturn);
         }
-
         [HttpPost("collection")]
-        public async Task<IActionResult> CreateCompanyCollection([FromBody] IEnumerable<CompanyForCreationDto> companyCollection)
+        public async Task<IActionResult> CreateCompanyCollection(
+  [FromBody] IEnumerable<CompanyForCreationDto> companyCollection)
         {
             if (companyCollection == null)
             {
@@ -122,6 +123,13 @@ namespace CompanyEmployees.Controllers
             _mapper.Map(company, companyEntity);
             await _repository.SaveAsync();
             return NoContent();
+        }
+
+        [HttpOptions]
+        public IActionResult GetCompaniesOptions()
+        {
+            Response.Headers.Add("Allow", "GET, OPTIONS, POST");
+            return Ok();
         }
     }
 }
