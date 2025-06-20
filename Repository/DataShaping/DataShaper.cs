@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-
+//lock,l
 namespace Repository.DataShaping
 {
     public class DataShaper<T> : IDataShaper<T> where T : class
