@@ -8,6 +8,7 @@ using Contracts;
 using Microsoft.AspNetCore.Mvc;
 using CompanyEmployees.ActionFilters;
 using Repository.DataShaping;
+using CompanyEmployees;
 
 namespace Start;
 
@@ -23,7 +24,7 @@ public class Startup
     public IConfiguration Configuration { get; }
 
     // This method gets called by the runtime. Use this method to add services to the container.
-   
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.ConfigureVersioning();
@@ -48,6 +49,10 @@ public class Startup
         {
             options.SuppressModelStateInvalidFilter = true;
         });
+        services.AddAuthentication();
+        services.ConfigureIdentity();
+        services.ConfigureJWT(Configuration);
+        services.AddScoped<IAuthenticationManager, AuthenticationManager>();
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -71,6 +76,7 @@ public class Startup
             ForwardedHeaders = ForwardedHeaders.All
         });
         app.UseRouting();
+        app.UseAuthentication();
         app.UseAuthorization();
         app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
     }
